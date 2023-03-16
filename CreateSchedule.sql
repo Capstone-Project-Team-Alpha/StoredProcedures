@@ -1,4 +1,4 @@
-create or alter procedure CreateSchedule (@AppointmentDate date, @AppointmentStartTime time, @AppointmentEndTime time, @StaffID int, @MaxParticipants int)
+create or alter procedure CreateSchedule (@StaffID int, @AppointmentNameID int, @AppointmentDate date, @AppointmentStartTime time, @AppointmentEndTime time, @DurationMins int, @MaxParticipants int)
 as
 	Declare @ReturnCode int
 	set @ReturnCode = 1
@@ -7,38 +7,57 @@ if @AppointmentDate is NULL
 		RAISERROR('CreateSchedule - @AppointmentDate is Required', 16, 1)
 	End
 Else
-	 if @AppointmentStartTime is NULL
-		Begin
-			RAISERROR('CreateSchedule - @AppointmentStartDate is Required', 16, 1)
-		End
-	 Else
-		if @AppointmentEndTime is NULL
+	if @StaffID is NULL
 			Begin
-				RAISERROR('CreateSchedule - @AppointmentEndDate is Required', 16, 1)
+				RAISERROR('CreateSchedule - @StaffID is Required', 16, 1)
+			End
+	Else
+		if not exists (select StaffID from Staff where StaffID = @StaffID)
+			Begin
+				RAISERROR('CreateSchedule - Staff Member does not exist', 16, 1)
 			End
 		Else
-			if @StaffID is NULL
+			if @AppointmentNameID is NULL
 				Begin
-					RAISERROR('CreateSchedule - @StaffID is Required', 16, 1)
+					RAISERROR('CreateSchedule - @AppointmentNameID is Required', 16, 1)
 				End
-				if not exists (select StaffID from Staff where StaffID = @StaffID)
+			Else
+				if not exists (select AppointmentNameID from AppointmentName where AppointmentNameID = @AppointmentNameID)
 					Begin
-						RAISERROR('CreateSchedule - Staff Member does not exist', 16, 1)
+						RAISERROR('CreateSchedule - Appointment Name does not exist', 16, 1)
 					End
 				Else
-					if @MaxParticipants is NULL
+					if @AppointmentDate is NULL
 						Begin
-							RAISERROR('CreateSchedule - @MaxParticipants is Required', 16, 1)
+							RAISERROR('CreateSchedule - @AppointmentDate is Required', 16, 1)
 						End
-							Else
+					Else
+						if @AppointmentStartTime is NULL
+							Begin
+								RAISERROR('CreateSchedule - @AppointmentStartDate is Required', 16, 1)
+							End
+						 Else
+							if @AppointmentEndTime is NULL
 								Begin
-									insert into Schedule(StaffID, AppointmentDate, AppointmentStartDate, AppointmentEndDate, TotalNumberOfParticipants, MaxParticipants, Status)
-												values (@StaffID, @AppointmentDate, @AppointmentStartTime, @AppointmentEndTime, 0, @MaxParticipants, 1)
-													if @@ERROR = 0
-														set @ReturnCode = 0
-													Else
-														RAISERROR('CreateSchedule - CreateSchedule Error from Schedule Table', 16, 1)
-												End
-														
-												
+									RAISERROR('CreateSchedule - @AppointmentEndDate is Required', 16, 1)
+								End
+							Else
+								if @DurationMins is NULL
+									Begin
+										RAISERROR('CreateSchedule - @DurationMins is Required', 16, 1)
+									End
+								Else
+									if @MaxParticipants is NULL
+										Begin
+											RAISERROR('CreateSchedule - @MaxParticipants is Required', 16, 1)
+										End
+									Else
+										Begin
+											insert into Schedule(StaffID, AppointmentNameID, AppointmentDate, AppointmentStartTime, AppointmentEndTime, DurationMins, TotalNumberOfParticipants, MaxParticipants, Status)
+														values (@StaffID, @AppointmentNameID, @AppointmentDate, @AppointmentStartTime, @AppointmentEndTime, @DurationMins, 0, @MaxParticipants, 1)
+										if @@ERROR = 0
+											set @ReturnCode = 0
+										Else
+											RAISERROR('CreateSchedule - CreateSchedule Error from Schedule Table', 16, 1)
+										End
 Return @ReturnCode
